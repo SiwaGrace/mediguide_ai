@@ -1,72 +1,74 @@
-/**
- * MediGuide AI - Async Simulated Healthcare Guidance Service
- * This service simulates a secure LLM connection with network delay.
- * It classifies queries based on safety parameters, assesses urgency,
- * and provides structured, medically-informed preliminary answers.
- */
+import { getMedicalAIResponse } from "./healthAiService";
 
-// Basic helper to simulate latency
+// Standard delay helper for offline fallbacks
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Urgency keywords list
 const EMERGENCY_KEYWORDS = [
-  "chest pain",
-  "heart attack",
-  "breathing",
-  "breath",
-  "suffocating",
-  "unconscious",
-  "passed out",
-  "bleeding heavily",
-  "severe bleed",
-  "poison",
-  "stroke",
-  "numbness one side",
-  "speech slur",
-  "suicidal",
+  'chest pain', 'heart attack', 'breathing', 'breath', 'suffocating', 
+  'unconscious', 'passed out', 'bleeding heavily', 'severe bleed', 
+  'poison', 'stroke', 'numbness one side', 'speech slur', 'suicidal'
 ];
 
 const MODERATE_KEYWORDS = [
-  "fever",
-  "vomiting",
-  "diarrhea",
-  "malaria",
-  "coughing",
-  "burn",
-  "sprain",
-  "broken bone",
-  "fracture",
-  "dog bite",
-  "infection",
-  "stomach ache",
-  "abdominal pain",
-  "abdominal",
-  "severe headache",
+  'fever', 'vomiting', 'diarrhea', 'malaria', 'coughing', 'burn', 
+  'sprain', 'broken bone', 'fracture', 'dog bite', 'infection', 
+  'stomach ache', 'abdominal pain', 'abdominal', 'severe headache'
 ];
 
 export async function getAIResponse(message, history = []) {
-  // Simulate network delay (1.2 seconds) to represent server-side AI processing
-  await delay(1200);
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY;
 
-  const cleanMessage = message.toLowerCase().trim();
+  // 1. Attempt Real-time Gemini API integration if key is available
+  if (apiKey && apiKey.trim() !== "" && !apiKey.includes("YOUR_API_KEY")) {
+    try {
+      const result = await getMedicalAIResponse(message, history);
 
-  // 1. Determine Urgency Level
-  let urgency = "Low";
-  let isEmergency = false;
+      // Verify if the API returned a successful clinical result (not a fallback)
+      if (result && result.title !== "Service Temporarily Unavailable" && result.response) {
+        
+        let formattedText = result.response;
 
-  if (EMERGENCY_KEYWORDS.some((key) => cleanMessage.includes(key))) {
-    urgency = "High";
-    isEmergency = true;
-  } else if (MODERATE_KEYWORDS.some((key) => cleanMessage.includes(key))) {
-    urgency = "Medium";
+        if (result.recommendations && result.recommendations.length > 0) {
+          formattedText += `\n\n**Actionable Recommendations:**\n` + 
+            result.recommendations.map(r => `* ${r}`).join('\n');
+        }
+
+        if (result.followUpQuestions && result.followUpQuestions.length > 0) {
+          formattedText += `\n\n**Follow-up Questions to consider:**\n` + 
+            result.followUpQuestions.map(q => `* ${q}`).join('\n');
+        }
+
+        return {
+          text: formattedText,
+          urgency: result.urgency || 'Low',
+          actions: result.suggestedActions || [],
+          timestamp: new Date().toISOString()
+        };
+      }
+    } catch (e) {
+      console.warn("⚠️ API Call failed. Activating local offline diagnostic trees...", e);
+    }
   }
 
-  // 2. Specific Response Tree (Quick Suggestions or Common Prompts)
-  let text = "";
+  // 2. Offline / Local Fallback Diagnostic Trees
+  await delay(1200);
+  const cleanMessage = message.toLowerCase().trim();
+
+  let urgency = 'Low';
+  let isEmergency = false;
+
+  if (EMERGENCY_KEYWORDS.some(key => cleanMessage.includes(key))) {
+    urgency = 'High';
+    isEmergency = true;
+  } else if (MODERATE_KEYWORDS.some(key => cleanMessage.includes(key))) {
+    urgency = 'Medium';
+  }
+
+  let text = '';
   let actions = [];
 
-  // Suggestion A: Headache
-  if (cleanMessage.includes("headache") && !isEmergency) {
+  // Suggestion: Headache
+  if (cleanMessage.includes('headache') && !isEmergency) {
     text = `A headache can be triggered by various factors such as stress, dehydration, lack of sleep, eye strain, or tension. 
 
 **Preliminary Guidance:**
@@ -76,22 +78,14 @@ export async function getAIResponse(message, history = []) {
 * **Relaxation:** Gently massage your temples or practice deep, slow breathing.
 
 *Note: If this headache is sudden, severe, and describes as the "worst headache of your life," or is accompanied by fever, neck stiffness, confusion, or difficulty speaking, seek immediate care.*`;
-
+    
     actions = [
       { label: "Find nearby pharmacies/clinics", actionType: "NAV_CLINICS" },
-      {
-        label: "Read about Hypertension & Headaches",
-        actionType: "NAV_EDUCATION",
-        payload: "Hypertension",
-      },
+      { label: "Read about Hypertension & Headaches", actionType: "NAV_EDUCATION", payload: "Hypertension" }
     ];
-  }
-  // Suggestion B: Find nearby clinics
-  else if (
-    cleanMessage.includes("find nearby clinics") ||
-    cleanMessage.includes("clinic") ||
-    cleanMessage.includes("hospital")
-  ) {
+  } 
+  // Suggestion: Clinics
+  else if (cleanMessage.includes('find nearby clinics') || cleanMessage.includes('clinic') || cleanMessage.includes('hospital')) {
     text = `I can definitely help guide you to healthcare services. Based on your current location, there are several verified clinics and general hospitals within a 5-kilometer radius. 
 
 * **St. Jude General Hospital** (3.5 km) - Offers 24/7 emergency care and full diagnostics.
@@ -99,16 +93,13 @@ export async function getAIResponse(message, history = []) {
 * **Nyaho Medical Center** (2.1 km) - High-quality private facility with rapid testing services.
 
 Would you like to open the interactive Clinics Directory to filter clinics by distance, ratings, and active emergency operations?`;
-
+    
     actions = [
-      { label: "Go to Clinics Map Directory", actionType: "NAV_CLINICS" },
+      { label: "Go to Clinics Map Directory", actionType: "NAV_CLINICS" }
     ];
-  }
-  // Suggestion C: Explain hypertension
-  else if (
-    cleanMessage.includes("hypertension") ||
-    cleanMessage.includes("high blood pressure")
-  ) {
+  } 
+  // Suggestion: Hypertension
+  else if (cleanMessage.includes('hypertension') || cleanMessage.includes('high blood pressure')) {
     text = `**Hypertension** (high blood pressure) is a chronic medical condition where the pressure of blood inside your arteries is consistently higher than normal. 
 
 **Key Takeaways:**
@@ -120,22 +111,12 @@ Would you like to open the interactive Clinics Directory to filter clinics by di
 You can read our full clinical article on hypertension written by our specialist team in the Education Hub.`;
 
     actions = [
-      {
-        label: "Open Health Articles (Hypertension)",
-        actionType: "NAV_EDUCATION",
-        payload: "Hypertension",
-      },
-      {
-        label: "Set Blood Pressure Check reminder",
-        actionType: "NAV_REMINDERS",
-      },
+      { label: "Open Health Articles (Hypertension)", actionType: "NAV_EDUCATION", payload: "Hypertension" },
+      { label: "Set Blood Pressure Check reminder", actionType: "NAV_REMINDERS" }
     ];
-  }
-  // Suggestion D: Pregnancy advice
-  else if (
-    cleanMessage.includes("pregnancy") ||
-    cleanMessage.includes("pregnant")
-  ) {
+  } 
+  // Suggestion: Pregnancy
+  else if (cleanMessage.includes('pregnancy') || cleanMessage.includes('pregnant')) {
     text = `Congratulations on this journey! Pregnancy care (prenatal care) is vital for ensuring the well-being of both the expectant mother and the developing baby.
 
 **Vital Prenatal Recommendations:**
@@ -148,16 +129,12 @@ You can read our full clinical article on hypertension written by our specialist
 If you experience any vaginal bleeding, severe cramping, continuous headaches, or blurred vision, contact your OB-GYN or visit St. Jude General Hospital's maternity ER immediately.`;
 
     actions = [
-      {
-        label: "Read Prenatal Care Guide",
-        actionType: "NAV_EDUCATION",
-        payload: "Pregnancy",
-      },
-      { label: "Find Prenatal Care Clinics", actionType: "NAV_CLINICS" },
+      { label: "Read Prenatal Care Guide", actionType: "NAV_EDUCATION", payload: "Pregnancy" },
+      { label: "Find Prenatal Care Clinics", actionType: "NAV_CLINICS" }
     ];
   }
-  // Suggestion E: Malaria
-  else if (cleanMessage.includes("malaria")) {
+  // Suggestion: Malaria
+  else if (cleanMessage.includes('malaria')) {
     text = `Malaria is a mosquito-borne infectious disease common in tropical regions. It is caused by Plasmodium parasites transmitted through infected Anopheles mosquito bites.
 
 **Common Symptoms:**
@@ -173,12 +150,8 @@ If you experience any vaginal bleeding, severe cramping, continuous headaches, o
 To prevent future bites, sleep under insecticide-treated nets (ITNs) and clear all stagnant water around your household.`;
 
     actions = [
-      {
-        label: "Read Malaria Article",
-        actionType: "NAV_EDUCATION",
-        payload: "Malaria",
-      },
-      { label: "Find rapid testing clinics", actionType: "NAV_CLINICS" },
+      { label: "Read Malaria Article", actionType: "NAV_EDUCATION", payload: "Malaria" },
+      { label: "Find rapid testing clinics", actionType: "NAV_CLINICS" }
     ];
   }
   // EMERGENCY SCENARIO
@@ -196,7 +169,7 @@ The symptoms or condition you described ("${message}") could represent a **life-
 *MediGuide AI cannot diagnose or treat emergencies. Please prioritize immediate clinical care.*`;
 
     actions = [
-      { label: "View Emergency Hospitals Near Me", actionType: "NAV_CLINICS" },
+      { label: "View Emergency Hospitals Near Me", actionType: "NAV_CLINICS" }
     ];
   }
   // Generic classification
@@ -214,7 +187,7 @@ Would you like to check nearby clinics or search our medical education library f
 
     actions = [
       { label: "Check Clinics Directory", actionType: "NAV_CLINICS" },
-      { label: "Browse Health Articles", actionType: "NAV_EDUCATION" },
+      { label: "Browse Health Articles", actionType: "NAV_EDUCATION" }
     ];
   }
 
@@ -222,6 +195,8 @@ Would you like to check nearby clinics or search our medical education library f
     text,
     urgency,
     actions,
-    timestamp: new Date().toISOString(),
+    timestamp: new Date().toISOString()
   };
 }
+
+export default getAIResponse;

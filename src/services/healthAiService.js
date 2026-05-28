@@ -1,7 +1,12 @@
-require("dotenv").config();
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY;
+
+if (!apiKey) {
+  console.warn("⚠️ VITE_GEMINI_API_KEY is not defined in your environment variables. Please check your .env file!");
+}
+
+const genAI = new GoogleGenerativeAI(apiKey);
 
 const model = genAI.getGenerativeModel({
   model: "gemini-2.5-flash",
@@ -55,18 +60,19 @@ Urgency Guidelines:
 Always prioritize safety.
 `;
 
-async function getMedicalAIResponse(
+export async function getMedicalAIResponse(
   message,
   history = [],
-  retries = 5,
+  retries = 3,
   delay = 1000,
 ) {
   if (!message || typeof message !== "string") {
     throw new Error("Message is required");
   }
 
+  // Format message history for standard context parsing
   const formattedHistory = history
-    .map((msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.text}`)
+    .map((msg) => `${msg.sender === "user" ? "User" : "Assistant"}: ${msg.text}`)
     .join("\n");
 
   const prompt = `
@@ -94,7 +100,7 @@ Generate the healthcare guidance JSON now.
     const response = await result.response;
     const text = response.text();
 
-    // Remove markdown code block if Gemini wraps JSON
+    // Remove markdown code block wrappers if Gemini wraps JSON in backticks
     const cleaned = text
       .replace(/```json/g, "")
       .replace(/```/g, "")
@@ -110,33 +116,32 @@ Generate the healthcare guidance JSON now.
     const status = error.status || error.code;
 
     const isRateLimit = status === 429 || error.message?.includes("429");
-
     const isServerError = status >= 500 || error.message?.includes("500");
 
     if (retries > 0 && (isRateLimit || isServerError)) {
       console.log(`⚠️ Retrying in ${delay}ms... (${retries} retries left)`);
-
       await new Promise((resolve) => setTimeout(resolve, delay));
-
       return getMedicalAIResponse(message, history, retries - 1, delay * 2);
     }
 
     console.error("❌ MediGuide AI Error:", error.message);
 
+    // Fallback response inside service if key is missing or errors occur
     return {
       urgency: "Medium",
       title: "Service Temporarily Unavailable",
       response:
-        "I'm currently unable to process your request. Please try again shortly or contact a healthcare provider if this is urgent.",
+        "I'm currently unable to securely connect to my generative analysis services. Please make sure VITE_GEMINI_API_KEY is configured correctly, or visit our Clinics tab to find professional medical care immediately.",
       followUpQuestions: [],
       recommendations: [
-        "Retry in a few moments",
-        "Visit a nearby clinic if symptoms worsen",
+        "Verify your VITE_GEMINI_API_KEY setting in .env",
+        "Restart your local Vite development server",
+        "Consult our Nearby Clinics search panel"
       ],
       emergency: false,
       suggestedActions: [
         {
-          label: "View Nearby Clinics",
+          label: "View Nearby Clinics Map",
           actionType: "NAV_CLINICS",
         },
       ],
@@ -145,4 +150,4 @@ Generate the healthcare guidance JSON now.
   }
 }
 
-module.exports = getMedicalAIResponse;
+export default getMedicalAIResponse;

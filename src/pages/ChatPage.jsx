@@ -33,13 +33,25 @@ export default function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const messagesEndRef = useRef(null);
+  const prevMessagesLengthRef = useRef(
+    (chats.find((c) => c.id === activeChatId) || chats[0])?.messages?.length ??
+      0,
+  );
 
   const activeChat = chats.find((c) => c.id === activeChatId) || chats[0];
 
-  // Auto-scroll to bottom of chat on new messages or typing state
+  // Auto-scroll only when a new message is appended (or typing indicator appears)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeChat?.messages, isTyping]);
+    const length = activeChat?.messages?.length ?? 0;
+    const prevLength = prevMessagesLengthRef.current;
+
+    // Scroll when a new message is appended or when typing begins
+    if (length > prevLength || isTyping) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    prevMessagesLengthRef.current = length;
+  }, [activeChat?.messages?.length, isTyping, activeChat?.id]);
 
   const handleSend = async (textToSend) => {
     const text = textToSend || input;

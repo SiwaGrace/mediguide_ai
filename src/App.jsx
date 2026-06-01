@@ -40,7 +40,7 @@ function AppContent() {
       </main>
 
       {/* Global Clinical Disclaimer Footer */}
-      <Footer />
+      {activePage !== 'chat' && <Footer />}
     </div>
   );
 }

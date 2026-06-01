@@ -9,7 +9,7 @@ export default function Footer() {
     <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Urgent Emergency Alert Banner inside Footer */}
-        {/* <div className="mb-8 p-4 bg-red-500/5 dark:bg-red-500/10 border border-red-500/20 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 text-left">
+        <div className="mb-8 p-4 bg-red-500/5 dark:bg-red-500/10 border border-red-500/20 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 text-left">
           <div className="p-2 bg-red-500 text-white rounded-xl shadow-md shadow-red-500/20 shrink-0">
             <ShieldAlert className="h-5 w-5" />
           </div>
@@ -21,7 +21,7 @@ export default function Footer() {
               {t.emergencyDisclaimer}
             </p>
           </div>
-        </div> */}
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Column 1: Brand */}
@@ -62,14 +62,14 @@ export default function Footer() {
                   Clinics & Hospital Directory
                 </button>
               </li>
-              <li>
+              {/* <li>
                 <button
                   onClick={() => setActivePage("reminders")}
                   className="hover:text-sky-500 cursor-pointer"
                 >
                   Medication Tracking
                 </button>
-              </li>
+              </li> */}
               <li>
                 <button
                   onClick={() => setActivePage("education")}

@@ -1,17 +1,25 @@
-import React, { useContext, useState } from 'react';
-import { AppContext } from '../context/AppContext';
-import { Activity, Sun, Moon, Globe, Menu, X } from 'lucide-react';
+import React, { useContext, useState } from "react";
+import { AppContext } from "../context/AppContext";
+import { Activity, Sun, Moon, Globe, Menu, X } from "lucide-react";
 
 export default function Navbar() {
-  const { activePage, setActivePage, theme, toggleTheme, language, setLanguage, t } = useContext(AppContext);
+  const {
+    activePage,
+    setActivePage,
+    theme,
+    toggleTheme,
+    language,
+    setLanguage,
+    t,
+  } = useContext(AppContext);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { id: 'landing', label: t.navHome },
-    { id: 'chat', label: t.navChat },
-    { id: 'clinics', label: t.navClinics },
-    { id: 'reminders', label: t.navReminders },
-    { id: 'education', label: t.navEducation }
+    { id: "landing", label: t.navHome },
+    { id: "chat", label: t.navChat },
+    { id: "clinics", label: t.navClinics },
+    // { id: 'reminders', label: t.navReminders },
+    { id: "education", label: t.navEducation },
   ];
 
   const handleNavClick = (pageId) => {
@@ -24,7 +32,10 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center cursor-pointer" onClick={() => handleNavClick('landing')}>
+          <div
+            className="flex items-center cursor-pointer"
+            onClick={() => handleNavClick("landing")}
+          >
             <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-sky-500 text-white shadow-md shadow-sky-500/20 mr-2.5">
               <Activity className="h-6 w-6 animate-pulse" />
             </div>
@@ -41,8 +52,8 @@ export default function Navbar() {
                 onClick={() => handleNavClick(link.id)}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${
                   activePage === link.id
-                    ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 shadow-sm"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
               >
                 {link.label}
@@ -58,7 +69,11 @@ export default function Navbar() {
               className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               aria-label="Toggle theme"
             >
-              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5 text-amber-400" />}
+              {theme === "light" ? (
+                <Moon className="h-5 w-5" />
+              ) : (
+                <Sun className="h-5 w-5 text-amber-400" />
+              )}
             </button>
 
             {/* Language Selector */}
@@ -69,10 +84,18 @@ export default function Navbar() {
                 onChange={(e) => setLanguage(e.target.value)}
                 className="bg-transparent border-none text-xs font-medium focus:ring-0 outline-none text-slate-700 dark:text-slate-300 cursor-pointer"
               >
-                <option value="en" className="dark:bg-slate-900">{t.english}</option>
-                <option value="fr" className="dark:bg-slate-900">{t.french}</option>
-                <option value="twi" className="dark:bg-slate-900">{t.twi}</option>
-                <option value="ewe" className="dark:bg-slate-900">{t.ewe}</option>
+                <option value="en" className="dark:bg-slate-900">
+                  {t.english}
+                </option>
+                <option value="fr" className="dark:bg-slate-900">
+                  {t.french}
+                </option>
+                <option value="twi" className="dark:bg-slate-900">
+                  {t.twi}
+                </option>
+                <option value="ewe" className="dark:bg-slate-900">
+                  {t.ewe}
+                </option>
               </select>
             </div>
           </div>
@@ -84,14 +107,22 @@ export default function Navbar() {
               onClick={toggleTheme}
               className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
-              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5 text-amber-400" />}
+              {theme === "light" ? (
+                <Moon className="h-5 w-5" />
+              ) : (
+                <Sun className="h-5 w-5 text-amber-400" />
+              )}
             </button>
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
           </div>
         </div>
@@ -106,14 +137,14 @@ export default function Navbar() {
               onClick={() => handleNavClick(link.id)}
               className={`w-full text-left px-4 py-2.5 rounded-lg text-base font-semibold cursor-pointer ${
                 activePage === link.id
-                  ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400'
-                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
               }`}
             >
               {link.label}
             </button>
           ))}
-          
+
           <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 flex items-center">
               <Globe className="h-4 w-4 mr-2" /> {t.langName}

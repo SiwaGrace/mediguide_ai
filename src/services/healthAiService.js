@@ -1,9 +1,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY;
+const apiKey =
+  import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY;
 
 if (!apiKey) {
-  console.warn("⚠️ VITE_GEMINI_API_KEY is not defined in your environment variables. Please check your .env file!");
+  console.warn(
+    "⚠️ VITE_GEMINI_API_KEY is not defined in your environment variables. Please check your .env file!",
+  );
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -51,7 +54,7 @@ You must ALWAYS return valid JSON in this exact structure:
 
 Urgency Guidelines:
 - HIGH:
-  chest pain, difficulty breathing, stroke symptoms, severe bleeding, unconsciousness, suicidal thoughts
+  chest pain, difficulty breathing, stroke symptoms, severe bleeding, unconsciousness, suicidal thoughts, rashes with fever, severe allergic reactions
 - MEDIUM:
   fever, malaria symptoms, infections, vomiting, fractures
 - LOW:
@@ -72,7 +75,9 @@ export async function getMedicalAIResponse(
 
   // Format message history for standard context parsing
   const formattedHistory = history
-    .map((msg) => `${msg.sender === "user" ? "User" : "Assistant"}: ${msg.text}`)
+    .map(
+      (msg) => `${msg.sender === "user" ? "User" : "Assistant"}: ${msg.text}`,
+    )
     .join("\n");
 
   const prompt = `
@@ -136,7 +141,7 @@ Generate the healthcare guidance JSON now.
       recommendations: [
         "Verify your VITE_GEMINI_API_KEY setting in .env",
         "Restart your local Vite development server",
-        "Consult our Nearby Clinics search panel"
+        "Consult our Nearby Clinics search panel",
       ],
       emergency: false,
       suggestedActions: [
